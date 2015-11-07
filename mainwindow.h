@@ -15,8 +15,12 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+private slots:
+    void on_generateInitialSetButton_clicked();
+
 private:
     Ui::MainWindow *ui;
+    int programId;
 };
 
 #endif // MAINWINDOW_H
