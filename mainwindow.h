@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 
+#include "genome.h"
+
 namespace Ui {
 class MainWindow;
 }
@@ -17,9 +19,11 @@ public:
 
 private slots:
     void on_generateInitialSetButton_clicked();
+    void on_dial_valueChanged(int value);
 
 private:
     Ui::MainWindow *ui;
+    Genome *genome;
     int programId;
 };
 

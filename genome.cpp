@@ -5,22 +5,42 @@
 #include <QDebug>
 #include <QThread>
 
-Genome::Genome(QObject *parent) : QObject(parent)
+Genome::Genome(QObject *parent) :
+    QObject(parent),
+    m_maxInitialDepth(4)
 {
+    qsrand(QDateTime::currentDateTime().toMSecsSinceEpoch()); // set random seed
     m_operators << "add"
                 << "sub"
                 << "div"
                 << "mul";
 }
 
-QTreeWidgetItem *Genome::generateInitialSet(int id = 0)
+void Genome::setMaxInitialDepth(int depth)
+{
+    m_maxInitialDepth = depth;
+}
+
+QTreeWidgetItem *Genome::generateInitialSet(int id)
 {
     QTreeWidgetItem *item = new QTreeWidgetItem();
-    item->setText(0, "programID: " + QString::number(id));
+    addRandomChild(item, 3); // excludeRC 3 = exclude image or number (only operator allowed as top node)
     item->setBackgroundColor(0, QColor::fromHsv((id * 10) % 255, 200, 255));
-    addRandomChild(item);
+    item->setText(0, "program " + QString::number(id));
 
     return item;
+}
+
+int Genome::itemDepth(QTreeWidgetItem *const parent)
+{
+    QTreeWidgetItem *item = parent;
+    int depth = 0;
+    while(item != 0) {
+        item = item->parent();
+        ++depth;
+    }
+
+    return depth;
 }
 
 QTreeWidgetItem *Genome::addRandomOperatorAsChild(QTreeWidgetItem *const parent)
@@ -54,12 +74,10 @@ QTreeWidgetItem *Genome::addRandomNumberAsChild(QTreeWidgetItem *const parent)
 
 int Genome::addRandomChild(QTreeWidgetItem *const parent, int excludeRC)
 {
-    QThread::msleep(2.9); // required to set random seed
-    qsrand(QDateTime::currentDateTime().toMSecsSinceEpoch());
     bool setAsOperator = double(qrand() % 2);
     bool setAsImage = double (qrand() % 2);
 
-    switch (excludeRC) {
+    switch (excludeRC) { // exclusion rules
     case 0:
         setAsOperator = false;
         break;
@@ -71,18 +89,25 @@ int Genome::addRandomChild(QTreeWidgetItem *const parent, int excludeRC)
             setAsOperator = double(qrand() % 2);
         setAsImage = !setAsOperator;
         break;
+    case 3:
+        setAsOperator = true;
+        break;
+    }
+
+    if (itemDepth(parent) >= m_maxInitialDepth) { // depth case
+        setAsOperator = false;
+        if (excludeRC == 2)
+            setAsImage = true;
     }
 
     int rc = -1;
     if (setAsOperator) {
         auto item = addRandomOperatorAsChild(parent);
         int result = addRandomChild(item);
-
         if (result != 0)
             addRandomChild(item, result);
         else
             addRandomChild(item);
-
         rc = 0;
     } else if (setAsImage) {
         addImageAsChild(parent);
