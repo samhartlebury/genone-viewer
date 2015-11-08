@@ -21,6 +21,8 @@ private slots:
     void on_generateInitialSetButton_clicked();
     void on_dial_valueChanged(int value);
 
+    void on_breedButton_clicked();
+
 private:
     Ui::MainWindow *ui;
     Genome *genome;
